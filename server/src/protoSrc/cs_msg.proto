@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cs_msg;
+
+
+message c2s_connector_main_ping {  // ping
+    int32 age = 1;
+    string name = 2;
+}
+
+message s2c_connector_main_ping {  // ping   回调
+    int32 code = 1;
+    string msg = 2;
+}
+
+message s2c_onHello{    // 来自服务器的问候
+    string msg = 1; 
+}
