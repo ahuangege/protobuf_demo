@@ -6,7 +6,7 @@ let heartbeatResTimeoutTimer: any = null;
 
 let handlers: { [cmdIndex: number]: Function } = {};
 let bindedObj: { [cmdIndex: number]: any } = {};
-let msgCache: { "id": number, "data": any }[] = [];
+let msgCache: { "id": number, "data": Uint8Array }[] = [];
 let openOrClose = { "open": -1, "close": -2 };
 let tmpBuf = { "len": 0, "buffer": new Uint8Array(0) };
 let md5 = "";
@@ -81,7 +81,7 @@ export class network {
      * @param cb 
      * @param self 
      */
-    static onOpen(cb: (msg?: any) => void, self: any) {
+    static onOpen(cb: () => void, self: any) {
         handlers[openOrClose.open] = cb.bind(self);
         bindedObj[openOrClose.open] = self;
     }
@@ -118,7 +118,7 @@ export class network {
      * @param cb 
      * @param self 
      */
-    static addHandler(cmd: string, cb: (msg?: any) => void, self: any) {
+    static addHandler(cmd: string, cb: (msg?: Uint8Array) => void, self: any) {
         let cmdIndex = route.indexOf(cmd);
         if (cmdIndex === -1) {
             console.warn("cmd not exists:", cmd);
@@ -146,7 +146,7 @@ export class network {
      * @param cmd 
      * @param data 
      */
-    static sendMsg(cmd: string, data?: any) {
+    static sendMsg(cmd: string, data?: Uint8Array) {
         if (!ws || ws.readyState !== 1) {
             console.warn("ws is null");
             return;
@@ -179,8 +179,7 @@ export class network {
 }
 
 
-function encode(cmdIndex: number, data: any) {
-    let dataBuf = strencode(JSON.stringify(data));
+function encode(cmdIndex: number, dataBuf: Uint8Array) {
     let msg_len = dataBuf.length + 3;
     let buffer = new Uint8Array(msg_len + 4);
     let index = 0;
@@ -202,7 +201,7 @@ function handleMsg(data: Uint8Array) {
         while (index < data.length) {
             let msgLen = (data[index] << 24) | (data[index + 1] << 16) | (data[index + 2] << 8) | data[index + 3];
             if (data[index + 4] === 1) {
-                msgCache.push({ "id": (data[index + 5] << 8) | data[index + 6], "data": JSON.parse(strdecode(data.subarray(index + 7, index + 4 + msgLen))) });
+                msgCache.push({ "id": (data[index + 5] << 8) | data[index + 6], "data": data.subarray(index + 7, index + 4 + msgLen) });
             } else if (data[index + 4] === 2) { //握手
                 handshakeOver(JSON.parse(strdecode(data.subarray(index + 5, index + 4 + msgLen))));
             } else if (data[index + 4] === 3) {  // 心跳回调
