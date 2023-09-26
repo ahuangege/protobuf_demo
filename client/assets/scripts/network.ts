@@ -1,3 +1,4 @@
+import { cs_msg } from "./proto/cs_msg";
 
 let ws: WebSocket = null;
 let route: string[] = [];
@@ -146,7 +147,7 @@ export class network {
      * @param cmd 
      * @param data 
      */
-    static sendMsg(cmd: string, data?: Uint8Array) {
+    static sendMsg(cmd: string, data: any = {}) {
         if (!ws || ws.readyState !== 1) {
             console.warn("ws is null");
             return;
@@ -157,10 +158,12 @@ export class network {
             console.warn("cmd not exists:", cmd);
             return;
         }
-        if (data === undefined) {
-            data = null;
+        if (data == null) {
+            data = {};
         }
-        let buffer = encode(cmdIndex, data);
+        let routeStr = cmd.split(".").join("_");
+        let buffMsg = cs_msg["c2s_" + routeStr].encode(data).finish();
+        let buffer = encode(cmdIndex, buffMsg);
         ws.send(buffer.buffer);
     }
 
@@ -201,7 +204,11 @@ function handleMsg(data: Uint8Array) {
         while (index < data.length) {
             let msgLen = (data[index] << 24) | (data[index + 1] << 16) | (data[index + 2] << 8) | data[index + 3];
             if (data[index + 4] === 1) {
-                msgCache.push({ "id": (data[index + 5] << 8) | data[index + 6], "data": data.subarray(index + 7, index + 4 + msgLen) });
+                let cmdId = (data[index + 5] << 8) | data[index + 6];
+                let msgBuf = data.subarray(index + 7, index + 4 + msgLen);
+                let routeStr = route[cmdId].split(".").join("_");
+                let msg = cs_msg["s2c_" + routeStr].decode(msgBuf);
+                msgCache.push({ "id": cmdId, "data": msg });
             } else if (data[index + 4] === 2) { //握手
                 handshakeOver(JSON.parse(strdecode(data.subarray(index + 5, index + 4 + msgLen))));
             } else if (data[index + 4] === 3) {  // 心跳回调

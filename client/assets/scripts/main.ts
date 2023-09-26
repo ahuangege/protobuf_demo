@@ -53,18 +53,16 @@ export default class NewClass extends cc.Component {
 
 
     private btn_click() {
-        let msg = cs_msg.c2s_connector_main_ping.encode({ "age": 30, "name": "ahuang" }).finish();
+        let msg = { "age": 30, "name": "ahuang" };
         network.sendMsg(cmd.connector_main_ping, msg);
     }
 
-    private svr_pingBack(msgBuf: Uint8Array) {
-        let msg = cs_msg.s2c_connector_main_ping.decode(msgBuf);
-        console.log("ping_back", msg.toJSON());
+    private svr_pingBack(msg: any) {
+        console.log("ping_back", msg);
     }
 
-    private svr_onHello(msgBuf: Uint8Array) {
-        let msg = cs_msg.s2c_onHello.decode(msgBuf);
-        console.log("onHello", msg.toJSON());
+    private svr_onHello(msg: any) {
+        console.log("onHello", msg);
     }
 
 

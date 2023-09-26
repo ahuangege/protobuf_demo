@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "mydog": "^2.3.6",
+    "protobufjs": "^7.2.5"
+  }
+}

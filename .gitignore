@@ -1,0 +1,7 @@
+server/dist
+server/node_modules
+
+client/library
+client/local
+client/packages
+client/temp
